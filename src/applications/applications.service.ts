@@ -38,8 +38,7 @@ export class ApplicationsService {
     return this.prisma.application.update({
       where: { id },
       data: {
-        ...dto,
-        appliedDate: dto.appliedDate ? new Date(dto.appliedDate) : undefined,
+        stage: dto.stage,
       },
     });
   }
