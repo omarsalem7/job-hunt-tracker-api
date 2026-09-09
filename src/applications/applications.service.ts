@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateApplicationDto } from './dto/create-application.dto.js';
-import { UpdateApplicationDto } from './dto/update-application.dto.js';
+import { UpdateApplicationStageDto } from './dto/update-application.dto.js';
 
 @Injectable()
 export class ApplicationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async getList() {
     return this.prisma.application.findMany({
@@ -32,7 +32,7 @@ export class ApplicationsService {
     });
   }
 
-  async update(id: number, dto: UpdateApplicationDto) {
+  async update(id: number, dto: UpdateApplicationStageDto) {
     await this.getById(id);
 
     return this.prisma.application.update({
