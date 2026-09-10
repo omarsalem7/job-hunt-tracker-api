@@ -7,15 +7,16 @@ import { UpdateApplicationStageDto } from './dto/update-application.dto.js';
 export class ApplicationsService {
   constructor(private readonly prisma: PrismaService) { }
 
-  async getList() {
+  async getList(userId: number) {
     return this.prisma.application.findMany({
+      where: { userId },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async getById(id: number) {
-    const application = await this.prisma.application.findUnique({
-      where: { id },
+  async getById(userId: number, id: number) {
+    const application = await this.prisma.application.findFirst({
+      where: { id, userId },
     });
     if (!application) {
       throw new NotFoundException(`Application with ID ${id} not found`);
@@ -23,18 +24,19 @@ export class ApplicationsService {
     return application;
   }
 
-  async create(dto: CreateApplicationDto) {
+  async create(userId: number, dto: CreateApplicationDto) {
     return this.prisma.application.create({
       data: {
         ...dto,
         appliedDate: dto.appliedDate ? new Date(dto.appliedDate) : undefined,
+        userId
       },
     });
   }
 
-  async update(id: number, dto: UpdateApplicationStageDto) {
-    await this.getById(id);
-
+  async update(userId: number, id: number, dto: UpdateApplicationStageDto) {
+    // Ensures ownership or throws 404
+    await this.getById(userId, id);
     return this.prisma.application.update({
       where: { id },
       data: {
@@ -43,9 +45,9 @@ export class ApplicationsService {
     });
   }
 
-  async remove(id: number) {
-    await this.getById(id);
-
+  async remove(userId: number, id: number) {
+    // Ensures ownership or throws 404
+    await this.getById(userId, id);
     return this.prisma.application.delete({
       where: { id },
     });
