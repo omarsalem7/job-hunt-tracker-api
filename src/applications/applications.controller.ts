@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApplicationsService } from './applications.service.js';
@@ -14,37 +15,48 @@ import { CreateApplicationDto } from './dto/create-application.dto.js';
 import { UpdateApplicationStageDto } from './dto/update-application.dto.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { PaginationDto } from '../common/dto/pagination.dto.js';
 @UseGuards(JwtAuthGuard)
 @Controller('applications')
 export class ApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) { }
 
+  @Get('stats')
+  getApplicationsStats(@CurrentUser('id') userId: number) {
+    return this.applicationsService.getStats(userId);
+  }
+
+  @Get('board')
+  getApplicationsBoard(@CurrentUser('id') userId: number) {
+    return this.applicationsService.getListBoard(userId);
+  }
+
   @Get()
-  getApplications(@CurrentUser() user: { id: number }) {
-    return this.applicationsService.getList(user.id);
+  getApplications(@CurrentUser('id') userId: number, @Query() paginationDto: PaginationDto) {
+    return this.applicationsService.getList(userId, paginationDto);
   }
 
   @Get(':id')
-  getApplicationById(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: { id: number }) {
-    return this.applicationsService.getById(user.id, id);
+  getApplicationById(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') userId: number) {
+    return this.applicationsService.getById(userId, id);
   }
 
   @Post()
-  createApplication(@Body() createApplicationDto: CreateApplicationDto, @CurrentUser() user: { id: number }) {
-    return this.applicationsService.create(user.id, createApplicationDto);
+  createApplication(@Body() createApplicationDto: CreateApplicationDto, @CurrentUser('id') userId: number) {
+    return this.applicationsService.create(userId, createApplicationDto);
   }
 
   @Patch(':id')
   updateApplication(
     @Param('id', ParseIntPipe) id: number,
     @Body() UpdateApplicationStageDto: UpdateApplicationStageDto,
-    @CurrentUser() user: { id: number }
+    @CurrentUser('id') userId: number
   ) {
-    return this.applicationsService.update(user.id, id, UpdateApplicationStageDto);
+    return this.applicationsService.update(userId, id, UpdateApplicationStageDto);
   }
 
   @Delete(':id')
-  deleteApplication(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: { id: number }) {
-    return this.applicationsService.remove(user.id, id);
+  deleteApplication(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') userId: number) {
+    return this.applicationsService.remove(userId, id);
   }
 }
