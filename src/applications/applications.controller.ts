@@ -16,6 +16,10 @@ import { UpdateApplicationStageDto } from './dto/update-application.dto.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { PaginationDto } from '../common/dto/pagination.dto.js';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+
+@ApiTags('Applications')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('applications')
 export class ApplicationsController {
