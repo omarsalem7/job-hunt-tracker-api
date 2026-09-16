@@ -77,6 +77,9 @@ export class ApplicationsService {
   async getById(userId: number, id: number) {
     const application = await this.prisma.application.findFirst({
       where: { id, userId },
+      include: {
+        contacts: true,
+      }
     });
     if (!application) {
       throw new NotFoundException(`Application with ID ${id} not found`);

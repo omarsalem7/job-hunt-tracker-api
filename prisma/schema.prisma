@@ -21,12 +21,34 @@ model Application {
   stage       ApplicationStage @default(applied)
   notes       String?
   appliedDate DateTime         @default(now())
+  contacts    Contact[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model Contact {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  applicationId Int?
+  name          String
+  role          String?
+  email         String?
+  phone         String?
+  linkedInUrl   String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relationships
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([applicationId])
 }
 
 model User {
@@ -36,4 +58,5 @@ model User {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   applications Application[]
+  contacts     Contact[]
 }
