@@ -1,7 +1,9 @@
 import { ApplicationStage } from '@prisma/client';
 import {
+  IsArray,
   IsDateString,
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -31,4 +33,9 @@ export class CreateApplicationDto {
   @IsDateString()
   @IsOptional()
   appliedDate?: string;
+
+  @IsArray()
+  @IsInt({ each: true, message: 'Each tag ID must be an integer' })
+  @IsOptional()
+  tagIds?: number[]
 }

@@ -22,6 +22,7 @@ model Application {
   notes       String?
   appliedDate DateTime         @default(now())
   contacts    Contact[]
+  tags        Tag[] // Many-to-many back-relation
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
@@ -51,6 +52,21 @@ model Contact {
   @@index([applicationId])
 }
 
+model Tag {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  name      String
+  color     String   @default("#3B82F6")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@unique([userId, name]) // A user cannot create two tags with the same name!
+  @@index([userId])
+}
+
 model User {
   id           Int           @id @default(autoincrement())
   email        String        @unique
@@ -59,4 +75,5 @@ model User {
   updatedAt    DateTime      @updatedAt
   applications Application[]
   contacts     Contact[]
+  tags         Tag[]
 }

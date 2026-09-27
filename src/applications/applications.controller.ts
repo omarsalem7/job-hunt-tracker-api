@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -63,4 +64,15 @@ export class ApplicationsController {
   deleteApplication(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') userId: number) {
     return this.applicationsService.remove(userId, id);
   }
+
+
+  @Put(':id/tags')
+  setTags(
+    @CurrentUser('id') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body('tagIds') tagIds: number[] = [],
+  ) {
+    return this.applicationsService.setTags(userId, id, tagIds);
+  }
+
 }
