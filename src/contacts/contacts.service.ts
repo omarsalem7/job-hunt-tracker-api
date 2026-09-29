@@ -7,7 +7,7 @@ import { UpdateContactDto } from './dto/update-contact.dto.js';
 export class ContactsService {
     constructor(private readonly prisma: PrismaService) { }
 
-    findAll(userId: number) {
+    async findAll(userId: number) {
         return this.prisma.contact.findMany({
             where: { userId },
             include: {
