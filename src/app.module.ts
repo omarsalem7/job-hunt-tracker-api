@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { validateEnv } from './config/env.validation.js';
 import { ContactsModule } from './contacts/contacts.module.js';
 import { TagsModule } from './tags/tags.module.js';
+import { ShareModule } from './share/share.module.js';
 
 @Module({
   imports: [
@@ -20,8 +21,9 @@ import { TagsModule } from './tags/tags.module.js';
     AuthModule,
     ContactsModule,
     TagsModule,
+    ShareModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

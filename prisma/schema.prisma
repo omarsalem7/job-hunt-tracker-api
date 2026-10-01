@@ -76,4 +76,25 @@ model User {
   applications Application[]
   contacts     Contact[]
   tags         Tag[]
+  shareLinks   ShareLink[]  
+}
+
+
+model ShareLink{
+   id          Int       @id @default(autoincrement())
+   token       String    @unique @default(uuid()) // Secure unguessable token
+   userId      Int
+   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+   // Optional controls
+   includeNotes    Boolean   @default(false) // Hide private interview thoughts?
+   includeContacts Boolean   @default(false) // Hide recruiter personal contacts?
+   expiresAt       DateTime? // Link expires after 7 days, 30 days, etc.
+   isActive        Boolean   @default(true)  // Instant revoke switch
+  
+   createdAt   DateTime  @default(now())
+   updatedAt   DateTime  @updatedAt
+
+  @@index([token])
+  @@index([userId])
 }
