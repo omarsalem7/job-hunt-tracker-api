@@ -18,6 +18,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { PaginationDto } from '../common/dto/pagination.dto.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { SnoozeFollowUpDto } from './dto/follow-up.dto.js';
 
 @ApiTags('Applications')
 @ApiBearerAuth()
@@ -36,9 +37,24 @@ export class ApplicationsController {
     return this.applicationsService.getListBoard(userId);
   }
 
+  @Get('notifications')
+  getNotifications(@CurrentUser('id') userId: number) {
+    return this.applicationsService.getNotifications(userId);
+  }
+
   @Get()
   getApplications(@CurrentUser('id') userId: number, @Query() paginationDto: PaginationDto) {
     return this.applicationsService.getList(userId, paginationDto);
+  }
+
+  @Patch(':id/followed-up')
+  markFollowedUp(@CurrentUser('id') userId: number, @Param('id', ParseIntPipe) id: number) {
+    return this.applicationsService.markFollowedUp(userId, id);
+  }
+
+  @Patch(':id/snooze')
+  snoozeFollowUp(@CurrentUser('id') userId: number, @Param('id', ParseIntPipe) id: number, @Body() dto: SnoozeFollowUpDto) {
+    return this.applicationsService.snoozeFollowUp(userId, id, dto.days);
   }
 
   @Get(':id')

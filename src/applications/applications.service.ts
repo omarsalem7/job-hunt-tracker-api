@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateApplicationDto } from './dto/create-application.dto.js';
 import { UpdateApplicationStageDto } from './dto/update-application.dto.js';
 import { PaginationDto } from '../common/dto/pagination.dto.js';
+import { FollowUpStatus } from './dto/follow-up.dto.js';
 
 @Injectable()
 export class ApplicationsService {
@@ -49,9 +50,13 @@ export class ApplicationsService {
         where: { userId },
       }),
     ]);
+    const withStatus = applications.map((app) => ({
+      ...app,
+      followUpStatus: this.calculateFollowUpStatus(app),
+    }));
 
     return {
-      data: applications,
+      data: withStatus,
       meta: {
         page,
         limit,
@@ -70,11 +75,18 @@ export class ApplicationsService {
       orderBy: { createdAt: 'desc' },
     });
 
+    const appsWithStatus = applications.map((a) => {
+      return {
+        ...a,
+        followUpStatus: this.calculateFollowUpStatus(a),
+      };
+    });
+
     return {
-      applied: applications.filter((a) => a.stage === ApplicationStage.applied),
-      interviewing: applications.filter((a) => a.stage === ApplicationStage.interview),
-      offer: applications.filter((a) => a.stage === ApplicationStage.offer),
-      rejected: applications.filter((a) => a.stage === ApplicationStage.rejected),
+      applied: appsWithStatus.filter((a) => a.stage === ApplicationStage.applied),
+      interviewing: appsWithStatus.filter((a) => a.stage === ApplicationStage.interview),
+      offer: appsWithStatus.filter((a) => a.stage === ApplicationStage.offer),
+      rejected: appsWithStatus.filter((a) => a.stage === ApplicationStage.rejected),
     };
   }
 
@@ -88,7 +100,7 @@ export class ApplicationsService {
     if (!application) {
       throw new NotFoundException(`Application with ID ${id} not found`);
     }
-    return application;
+    return { ...application, followUpStatus: this.calculateFollowUpStatus(application) };
   }
 
   async create(userId: number, dto: CreateApplicationDto) {
@@ -170,5 +182,92 @@ export class ApplicationsService {
       },
     });
   }
+
+  async markFollowedUp(userId: number, id: number) {
+    const application = await this.prisma.application.findFirst({ where: { id, userId } })
+    if (!application) {
+      throw new NotFoundException('Application not found')
+    }
+
+    return this.prisma.application.update({ where: { id }, data: { lastFollowUpAt: new Date(), snoozeFollowUpUntil: null } })
+  }
+
+  async snoozeFollowUp(userId: number, id: number, days: number) {
+    const application = await this.prisma.application.findFirst({ where: { id, userId } })
+    if (!application)
+      throw new NotFoundException('Application not found')
+    const snoozeUntil = new Date();
+    snoozeUntil.setDate(snoozeUntil.getDate() + days);
+
+    return this.prisma.application.update({ where: { id }, data: { snoozeFollowUpUntil: snoozeUntil } })
+  }
+
+
+  async getNotifications(userId: number) {
+    const now = new Date();
+    const apps = await this.prisma.application.findMany({
+      where: {
+        userId, stage: ApplicationStage.applied, OR: [
+          { snoozeFollowUpUntil: null },
+          { snoozeFollowUpUntil: { lte: now } },
+        ],
+      }, orderBy: { appliedDate: 'asc' }
+    })
+    const items = apps
+      .map((app) => ({
+        ...app,
+        followUpStatus: this.calculateFollowUpStatus(app),
+      }))
+      .filter((app) => app.followUpStatus !== null);
+
+    return {
+      count: items.length,
+      items
+    }
+  }
+
+
+  private calculateFollowUpStatus(app: {
+    stage: ApplicationStage;
+    appliedDate: Date;
+    lastFollowUpAt: Date | null;
+    snoozeFollowUpUntil: Date | null;
+  }): FollowUpStatus | null {
+    if (app.stage !== ApplicationStage.applied) return null;
+
+    const now = new Date();
+    const isSnoozed = app.snoozeFollowUpUntil && app.snoozeFollowUpUntil > now;
+    if (isSnoozed) return null;
+
+    const daysSinceApplied = Math.floor((now.getTime() - app.appliedDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysSinceFollowUp =
+      app.lastFollowUpAt
+        ? Math.floor((now.getTime() - app.lastFollowUpAt.getTime()) / (1000 * 60 * 60 * 24))
+        : null;
+
+    if (daysSinceApplied >= 30) return FollowUpStatus.STALE_GHOSTED
+
+    if (!app.lastFollowUpAt) {
+      // Stale: no follow-up yet, 21+ days passed
+      if (daysSinceApplied >= 21) {
+        return FollowUpStatus.STALE_GHOSTED;
+      }
+
+      // 1st follow-up: no follow-up yet, 7+ days passed
+      if (daysSinceApplied >= 7) {
+        return FollowUpStatus.NEEDS_FIRST_FOLLOW_UP;
+      }
+
+    }
+
+    // 2nd follow-up: first already sent, 7+ days passed since then
+    if (app.lastFollowUpAt && daysSinceFollowUp && daysSinceFollowUp >= 7) {
+      return FollowUpStatus.NEEDS_SECOND_FOLLOW_UP;
+    }
+
+
+    return null;
+  }
+
 
 }
