@@ -5,6 +5,7 @@ import { AuthController } from './auth.controller.js';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy.js';
+import { EmailModule } from '../email/email.module.js';
 
 @Module({
   imports: [
@@ -14,10 +15,11 @@ import { JwtStrategy } from './jwt.strategy.js';
       useFactory: (configService: ConfigService) => ({
         secret: configService.getOrThrow<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: '1d',
+          expiresIn: '7d',
         },
       }),
     }),
+    EmailModule
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],

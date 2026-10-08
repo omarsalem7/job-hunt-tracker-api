@@ -5,6 +5,8 @@ import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
+import { VerifyEmailDto } from './dto/verify-email.dto.js';
+import { ResendOtpDto } from './dto/resend-otp.dto.js';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -31,4 +33,19 @@ export class AuthController {
     getProfile(@CurrentUser() user: any) {
         return user;
     }
+
+
+    @Post('verify-email')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Verify email with 6-digit OTP' })
+    verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
+        return this.authService.verifyEmail(verifyEmailDto);
+    }
+    @Post('resend-otp')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Resend verification OTP email' })
+    resendOtp(@Body() resendOtpDto: ResendOtpDto) {
+        return this.authService.resendOtp(resendOtpDto);
+    }
+
 }

@@ -9,6 +9,7 @@ import { validateEnv } from './config/env.validation.js';
 import { ContactsModule } from './contacts/contacts.module.js';
 import { TagsModule } from './tags/tags.module.js';
 import { ShareModule } from './share/share.module.js';
+import { EmailModule } from './email/email.module.js';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ShareModule } from './share/share.module.js';
     ContactsModule,
     TagsModule,
     ShareModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
