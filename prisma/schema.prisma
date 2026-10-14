@@ -82,14 +82,20 @@ model User {
   shareLinks   ShareLink[]  
 }
 
+enum OtpType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
 model EmailVerificationOtp {
   id        Int      @id @default(autoincrement())
   email     String
+  type      OtpType @default(EMAIL_VERIFICATION)
   otpHash   String
   expiresAt DateTime
   attempts  Int      @default(0)
   createdAt DateTime @default(now())
-  @@index([email])
+  @@index([email, type])
 }
 
 

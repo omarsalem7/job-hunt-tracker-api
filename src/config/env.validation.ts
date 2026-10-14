@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsNotEmpty, IsString, validateSync } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, validateSync } from 'class-validator';
 
 export class EnvironmentVariables {
   @IsString()
@@ -9,6 +9,18 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty({ message: 'JWT_SECRET environment variable is required' })
   JWT_SECRET: string;
+
+  @IsString()
+  @IsOptional()
+  SMTP_USER?: string;
+
+  @IsString()
+  @IsOptional()
+  SMTP_PASS?: string;
+
+  @IsString()
+  @IsOptional()
+  EMAIL_FROM?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

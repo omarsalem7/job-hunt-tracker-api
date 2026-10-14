@@ -7,6 +7,8 @@ import { CurrentUser } from './decorators/current-user.decorator.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 import { VerifyEmailDto } from './dto/verify-email.dto.js';
 import { ResendOtpDto } from './dto/resend-otp.dto.js';
+import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
+import { ResetPasswordDto } from './dto/reset-password.dto.js';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -46,6 +48,20 @@ export class AuthController {
     @ApiOperation({ summary: 'Resend verification OTP email' })
     resendOtp(@Body() resendOtpDto: ResendOtpDto) {
         return this.authService.resendOtp(resendOtpDto);
+    }
+
+    @Post('forgot-password')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Forgot password' })
+    forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+        return this.authService.forgotPassword(forgotPasswordDto);
+    }
+
+    @Post('reset-password')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Reset password' })
+    resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+        return this.authService.resetPassword(resetPasswordDto);
     }
 
 }
