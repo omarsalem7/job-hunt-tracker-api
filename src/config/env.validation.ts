@@ -21,6 +21,20 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   EMAIL_FROM?: string;
+
+
+  @IsString()
+  @IsNotEmpty({ message: 'GOOGLE_CLIENT_ID is required for Google OAuth' })
+  GOOGLE_CLIENT_ID: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'GOOGLE_CLIENT_SECRET is required for Google OAuth' })
+  GOOGLE_CLIENT_SECRET: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'GOOGLE_CALLBACK_URL is required for Google OAuth' })
+  GOOGLE_CALLBACK_URL: string;
+
 }
 
 export function validateEnv(config: Record<string, unknown>) {
