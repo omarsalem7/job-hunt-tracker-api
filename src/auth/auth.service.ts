@@ -108,6 +108,67 @@ export class AuthService {
         return userWithoutPassword;
     }
 
+
+    async validateOrCreateGoogleUser(googleUser: {
+        googleId: string;
+        email: string;
+        firstName?: string;
+        lastName?: string;
+        picture?: string;
+    }) {
+        const { googleId, email } = googleUser;
+        const normalizedEmail = email.trim().toLowerCase();
+
+        // 1. Check if user already exists with this Google ID
+        let user = await this.prisma.user.findUnique({
+            where: { googleId },
+        });
+
+        if (!user) {
+            // 2. Check if an account exists with this email address
+            user = await this.prisma.user.findUnique({
+                where: { email: normalizedEmail },
+            });
+
+            if (user) {
+                // Scenario 2: Link Google account to existing user
+                user = await this.prisma.user.update({
+                    where: { id: user.id },
+                    data: {
+                        googleId,
+                        isEmailVerified: true,
+                        // 🛡️ Wipe unverified password to prevent pre-hijacking
+                        passwordHash: user.isEmailVerified ? user.passwordHash : null,
+                    },
+                });
+            } else {
+                // Scenario 3: Brand-new user
+                user = await this.prisma.user.create({
+                    data: {
+                        email: normalizedEmail,
+                        googleId,
+                        passwordHash: null,
+                        isEmailVerified: true,
+                    },
+                });
+            }
+        }
+
+        // 3. Issue our application's JWT
+        const accessToken = await this.generateToken(user.id, user.email);
+
+        return {
+            user: {
+                id: user.id,
+                email: user.email,
+                isEmailVerified: user.isEmailVerified,
+                createdAt: user.createdAt,
+            },
+            accessToken,
+        };
+    }
+
+
     async resendOtp(resendOtpDto: ResendOtpDto) {
         const { email } = resendOtpDto;
         // 1. Check if user exists

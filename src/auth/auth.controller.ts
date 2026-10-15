@@ -30,10 +30,7 @@ export class AuthController {
     @ApiOperation({ summary: 'Google OAuth callback URL' })
     async googleAuthCallback(@Req() req: any) {
         // Passport ran GoogleStrategy.validate() and attached the Google user to req.user
-        return {
-            message: 'Google handshake successful!',
-            googleProfile: req.user,
-        };
+        return this.authService.validateOrCreateGoogleUser(req.user);
     }
 
     @Post('register')
