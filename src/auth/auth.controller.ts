@@ -1,4 +1,5 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
@@ -10,11 +11,15 @@ import { ResendOtpDto } from './dto/resend-otp.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { GoogleAuthGuard } from './google-auth.guard.js';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) { }
+    constructor(
+        private readonly authService: AuthService,
+        private readonly configService: ConfigService
+    ) { }
 
 
 
@@ -28,9 +33,11 @@ export class AuthController {
     @Get('google/callback')
     @UseGuards(GoogleAuthGuard)
     @ApiOperation({ summary: 'Google OAuth callback URL' })
-    async googleAuthCallback(@Req() req: any) {
-        // Passport ran GoogleStrategy.validate() and attached the Google user to req.user
-        return this.authService.validateOrCreateGoogleUser(req.user);
+    async googleAuthCallback(@Req() req: any, @Res() res: Response) {
+        const result = await this.authService.validateOrCreateGoogleUser(req.user);
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+        // 🛡️ Secure fragment redirect:
+        return res.redirect(`${frontendUrl}/auth/callback#token=${result.accessToken}`);
     }
 
     @Post('register')
