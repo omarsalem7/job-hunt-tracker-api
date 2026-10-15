@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
@@ -9,11 +9,32 @@ import { VerifyEmailDto } from './dto/verify-email.dto.js';
 import { ResendOtpDto } from './dto/resend-otp.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
+import { GoogleAuthGuard } from './google-auth.guard.js';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
+
+
+
+    @Get('google')
+    @UseGuards(GoogleAuthGuard)
+    @ApiOperation({ summary: 'Initiate Google OAuth login' })
+    async googleAuth() {
+        // Passport initiates the 302 redirect to accounts.google.com automatically
+    }
+
+    @Get('google/callback')
+    @UseGuards(GoogleAuthGuard)
+    @ApiOperation({ summary: 'Google OAuth callback URL' })
+    async googleAuthCallback(@Req() req: any) {
+        // Passport ran GoogleStrategy.validate() and attached the Google user to req.user
+        return {
+            message: 'Google handshake successful!',
+            googleProfile: req.user,
+        };
+    }
 
     @Post('register')
     @ApiOperation({ summary: 'Register a new user' })
