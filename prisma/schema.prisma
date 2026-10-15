@@ -70,16 +70,17 @@ model Tag {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  email        String        @unique
-  passwordHash String
+  id              Int           @id @default(autoincrement())
+  email           String        @unique
+  passwordHash    String?
+  googleId        String?       @unique
   isEmailVerified Boolean       @default(false) 
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  applications Application[]
-  contacts     Contact[]
-  tags         Tag[]
-  shareLinks   ShareLink[]  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  applications    Application[]
+  contacts        Contact[]
+  tags            Tag[]
+  shareLinks      ShareLink[]  
 }
 
 enum OtpType {

@@ -87,9 +87,15 @@ export class AuthService {
         if (!user) {
             throw new UnauthorizedException('Invalid email or password');
         }
-        // 3. Compare plaintext password with stored bcrypt hash
+
+        // 3. If user signed up via social login, they have no local password
+        if (!user.passwordHash) {
+            throw new UnauthorizedException('This account was registered using Google. Please log in with Google.');
+        }
+
+        // 4. Compare plaintext password with stored bcrypt hash
         const isPasswordValid = await bcrypt.compare(loginDto.password, user.passwordHash);
-        // 4. If password doesn't match, throw the SAME 401 error
+        // 5. If password doesn't match, throw the SAME 401 error
         if (!isPasswordValid) {
             throw new UnauthorizedException('Invalid email or password');
         }
@@ -98,7 +104,7 @@ export class AuthService {
             throw new ForbiddenException('Please verify your email before logging in.');
         }
         // 5. Exclude passwordHash from returned object
-        const { passwordHash, ...userWithoutPassword } = user;
+        const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
         return userWithoutPassword;
     }
 
