@@ -10,6 +10,7 @@ import { ContactsModule } from './contacts/contacts.module.js';
 import { TagsModule } from './tags/tags.module.js';
 import { ShareModule } from './share/share.module.js';
 import { EmailModule } from './email/email.module.js';
+import { AiModule } from './ai/ai.module.js';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { EmailModule } from './email/email.module.js';
     TagsModule,
     ShareModule,
     EmailModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -35,6 +35,13 @@ export class EnvironmentVariables {
   @IsNotEmpty({ message: 'GOOGLE_CALLBACK_URL is required for Google OAuth' })
   GOOGLE_CALLBACK_URL: string;
 
+  @IsString()
+  @IsOptional()
+  GEMINI_API_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  GEMINI_MODEL?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {
