@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI, Type } from '@google/genai';
+import { ApplicationStage } from '@prisma/client';
 import { ParsedJobResponseDto } from './dto/parse-job.dto.js';
 
 @Injectable()
@@ -48,17 +49,19 @@ export class AiService {
     }
 
     const prompt = `You are an expert career assistant and ATS data extractor.
-Analyze the following job description and extract structured information into a strict JSON object.
+Analyze the following job description and extract structured information into a strict JSON object that matches the Application entity format.
 
 Guidelines:
 1. "company": Name of the hiring company. If not mentioned, return "Unknown".
 2. "role": Clean official job title (without emojis or marketing words like "URGENT").
-3. "location": City, Country, or Remote status (e.g. "Remote", "Berlin (Hybrid)"). If unmentioned, return null.
-4. "salary": Extracted compensation or salary range. If unmentioned, return null.
-5. "jobType": Employment type (e.g. "Full-time", "Contract", "Part-time", "Internship"). If unmentioned, return null.
-6. "summary": Concise 2 to 3 sentence summary of the role, responsibilities, and team mission.
-7. "keyRequirements": Array of 3 to 6 key qualifications or technical skills.
-8. "suggestedTags": Array of 3 to 6 relevant tags for sorting (e.g. ["Remote", "TypeScript", "Node.js"]).
+3. "stage": Always set to "applied".
+4. "notes": A formatted markdown string containing:
+   - **Location:** (City, Country, Remote/Hybrid status if mentioned)
+   - **Salary:** (Disclosed compensation or "Not specified")
+   - **Job Type:** (e.g. Full-time, Contract if mentioned)
+   - **Summary:** (2 to 3 sentences summarizing the role and team mission)
+   - **Key Requirements:** (Bullet points of the 3 to 6 most critical technical skills/qualifications)
+   - **Tags / Keywords:** (Comma-separated list of 3 to 6 relevant tags, e.g. Remote, TypeScript, Node.js)
 
 Job Posting:
 """
@@ -76,20 +79,10 @@ ${trimmedText}
             properties: {
               company: { type: Type.STRING },
               role: { type: Type.STRING },
-              location: { type: Type.STRING, nullable: true },
-              salary: { type: Type.STRING, nullable: true },
-              jobType: { type: Type.STRING, nullable: true },
-              summary: { type: Type.STRING },
-              keyRequirements: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-              },
-              suggestedTags: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-              },
+              stage: { type: Type.STRING },
+              notes: { type: Type.STRING },
             },
-            required: ['company', 'role', 'summary', 'keyRequirements', 'suggestedTags'],
+            required: ['company', 'role', 'stage', 'notes'],
           },
         },
       });
@@ -101,12 +94,8 @@ ${trimmedText}
 
       const parsed: ParsedJobResponseDto = JSON.parse(responseText);
 
-      // Sanitize and deduplicate tags
-      if (Array.isArray(parsed.suggestedTags)) {
-        parsed.suggestedTags = Array.from(
-          new Set(parsed.suggestedTags.map((t) => String(t).trim()).filter(Boolean)),
-        );
-      }
+      // Default stage to applied
+      parsed.stage = ApplicationStage.applied;
 
       return parsed;
     } catch (error: any) {
