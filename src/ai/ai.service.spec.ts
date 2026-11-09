@@ -53,12 +53,8 @@ describe('AiService', () => {
     const mockAiResponse = {
       company: 'TechCorp',
       role: 'Backend Engineer',
-      location: 'Remote',
-      salary: '$120,000',
-      jobType: 'Full-time',
-      summary: 'Building high throughput APIs.',
-      keyRequirements: ['Node.js', 'PostgreSQL'],
-      suggestedTags: ['Node.js', 'Remote', 'Node.js'],
+      stage: 'applied',
+      notes: '**Location:** Remote\n**Salary:** $120,000\n**Summary:** Building high throughput APIs.',
     };
 
     (service as any).geminiClient = {
@@ -73,8 +69,8 @@ describe('AiService', () => {
 
     expect(result.company).toBe('TechCorp');
     expect(result.role).toBe('Backend Engineer');
-    expect(result.location).toBe('Remote');
-    expect(result.suggestedTags).toEqual(['Node.js', 'Remote']); // Duplicates removed
+    expect(result.stage).toBe('applied');
+    expect(result.notes).toContain('Remote');
   });
 
   it('should map Gemini 429 quota exhaustion to HttpStatus.TOO_MANY_REQUESTS', async () => {

@@ -1,3 +1,4 @@
+import { ApplicationStage } from '@prisma/client';
 import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class ParseJobDto {
@@ -11,10 +12,6 @@ export class ParseJobDto {
 export class ParsedJobResponseDto {
   company: string;
   role: string;
-  location: string | null;
-  salary: string | null;
-  jobType: string | null;
-  summary: string;
-  keyRequirements: string[];
-  suggestedTags: string[];
+  stage: ApplicationStage;
+  notes: string;
 }
