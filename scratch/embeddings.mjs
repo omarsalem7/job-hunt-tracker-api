@@ -1,3 +1,13 @@
+import { GoogleGenAI } from '@google/genai';
+
+if (!process.env.GEMINI_API_KEY) {
+  process.loadEnvFile('.env');
+}
+
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error('GEMINI_API_KEY is missing in environment and .env');
+}
+
 const sentences = [
   // 3 sentences about interviews
   {
@@ -38,5 +48,45 @@ const sentences = [
   },
 ];
 
-console.log(`Total sentences: ${sentences.length}`);
-console.table(sentences);
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+const response = await ai.models.embedContent({
+  model: 'gemini-embedding-001',
+  contents: sentences.map((s) => s.text),
+  config: {
+    outputDimensionality: 768,
+  },
+});
+
+const embeddings = response.embeddings ?? [];
+if (embeddings.length !== sentences.length) {
+  throw new Error(
+    `Expected ${sentences.length} embeddings, got ${embeddings.length}`,
+  );
+}
+
+const embedded = sentences.map((sentence, index) => {
+  const vector = embeddings[index]?.values;
+  if (!vector) {
+    throw new Error(`Missing embedding values for "${sentence.label}"`);
+  }
+  return { ...sentence, vector };
+});
+
+const first = embedded[0];
+console.log(`First (${first.label}) vector.length:`, first.vector.length);
+console.log(
+  'First 5 numbers:',
+  first.vector.slice(0, 5).map((n) => Number(n.toFixed(6))),
+);
+
+if (first.vector.length !== 768) {
+  throw new Error(`Expected 768 dimensions, got ${first.vector.length}`);
+}
+
+console.table(
+  embedded.map(({ label, vector }) => ({
+    label,
+    dimensions: vector.length,
+  })),
+);
